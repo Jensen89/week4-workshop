@@ -2,38 +2,37 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Auth } from '../services/auth';
+
 
 @Component({
   selector: 'app-login',
-  standalone: true,
   imports: [FormsModule, CommonModule],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
 export class Login {
 
-  email: string = '';
-  password: string = '';
-  error = false;
+  loginData = { email: '', password: '' };
 
-  private users = [
-    { email: '123@gmail.com', password: '123456' },
-    { email: 'test@gmail.com', password: 'test123' },
-    { email: 'admin@gmail.com', password: 'admin123'}
-  ]
-
-  constructor( private router: Router ) {}
+  constructor( private authService: Auth, private router: Router ) {}
 
   login() {
-    const user = this.users.find(u => u.email === this.email && u.password === this.password);
-    if (user) {
-      console.log('Login successful, navigating to profile');
-      this.router.navigate(['/profile']);
-    } else {
-      console.log('Login failed');
-      this.error = true;
-    }
-  }
+    this.authService.loginUser(this.loginData).subscribe(
+      (response) => {
+        if (response.valid) {
+          const userProfile = { ...response};
+          delete userProfile.password;
+          localStorage.setItem('currentUser', JSON.stringify(userProfile));
 
+      this.router.navigate(['/profile']);
+    }  
+  },
+      (error) => {
+        console.error('Login failed', error);
+        alert('Login failed. Please check your credentials.');
+      }
+    );
+  }
 }
 
